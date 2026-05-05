@@ -56,6 +56,15 @@ func IsEmpty(result comparator.Result) bool {
 		len(result.Mismatched) == 0
 }
 
+// Count returns the total number of differences in a Result.
+// It sums keys missing in the right side, keys missing in the left side,
+// and keys whose values differ between the two sides.
+func Count(result comparator.Result) int {
+	return len(result.MissingInRight) +
+		len(result.MissingInLeft) +
+		len(result.Mismatched)
+}
+
 // buildKeySet converts a slice of key names into a lookup map.
 // An empty slice signals "no filter" (all keys match).
 func buildKeySet(keys []string) map[string]struct{} {
