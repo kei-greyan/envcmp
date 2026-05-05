@@ -47,6 +47,15 @@ func Apply(result comparator.Result, opts Options) comparator.Result {
 	return out
 }
 
+// IsEmpty reports whether a Result contains no differences after filtering.
+// This is useful for callers that want to check if two environments are
+// equivalent under the given filter options without inspecting each field.
+func IsEmpty(result comparator.Result) bool {
+	return len(result.MissingInRight) == 0 &&
+		len(result.MissingInLeft) == 0 &&
+		len(result.Mismatched) == 0
+}
+
 // buildKeySet converts a slice of key names into a lookup map.
 // An empty slice signals "no filter" (all keys match).
 func buildKeySet(keys []string) map[string]struct{} {
