@@ -6,56 +6,56 @@ import (
 	"os"
 
 	"github.com/user/envcmp/internal/comparator"
+	"github.com/user/envcmp/internal/filter"
+	"github.com/user/envcmp/internal/formatter"
 	"github.com/user/envcmp/internal/parser"
-	"github.com/user/envcmp/internal/reporter"
 )
 
-const usage = `envcmp - diff .env files across environments
-
-Usage:
-  envcmp <file1> <file2> [flags]
-
-Flags:
-`
-
 func main() {
-	quiet := flag.Bool("quiet", false, "suppress output, exit 1 if differences found")
-	strict := flag.Bool("strict", false, "exit 1 if any differences are found")
-
-	flag.Usage = func() {
-		fmt.Fprint(os.Stderr, usage)
-		flag.PrintDefaults()
-	}
+	strict := flag.Bool("strict", false, "exit 1 if any diff is found")
+	onlyMissing := flag.Bool("only-missing", false, "report only missing keys")
+	onlyMismatched := flag.Bool("only-mismatched", false, "report only mismatched values")
+	keyFilter := flag.String("keys", "", "comma-separated list of keys to include")
+	format := flag.String("format", "text", "output format: text, json, markdown")
 	flag.Parse()
 
 	args := flag.Args()
-	if len(args) != 2 {
-		flag.Usage()
+	if len(args) < 2 {
+		fmt.Fprintln(os.Stderr, "usage: envcmp [flags] <file1> <file2>")
 		os.Exit(2)
 	}
 
-	leftPath := args[0]
-	rightPath := args[1]
-
-	left, err := parser.ParseFile(leftPath)
+	left, err := parser.ParseFile(args[0])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error reading %s: %v\n", leftPath, err)
+		fmt.Fprintf(os.Stderr, "error reading %s: %v\n", args[0], err)
 		os.Exit(2)
 	}
 
-	right, err := parser.ParseFile(rightPath)
+	right, err := parser.ParseFile(args[1])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error reading %s: %v\n", rightPath, err)
+		fmt.Fprintf(os.Stderr, "error reading %s: %v\n", args[1], err)
 		os.Exit(2)
 	}
 
 	result := comparator.Compare(left, right)
 
-	if !*quiet {
-		reporter.Report(os.Stdout, leftPath, rightPath, result)
+	result = filter.Apply(result, filter.Options{
+		OnlyMissing:    *onlyMissing,
+		OnlyMismatched: *onlyMismatched,
+		Keys:           *keyFilter,
+	})
+
+	out, err := formatter.Render(result, formatter.Format(*format))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "formatter error: %v\n", err)
+		os.Exit(2)
 	}
 
-	if *strict && result.HasDiff() {
+	if out != "" {
+		fmt.Print(out)
+	}
+
+	if *strict && !filter.IsEmpty(result) {
 		os.Exit(1)
 	}
 }
