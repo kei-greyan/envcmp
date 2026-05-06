@@ -49,6 +49,13 @@ func TestDiffValues_SortedByKey(t *testing.T) {
 	}
 }
 
+func TestDiffValues_EmptyMaps(t *testing.T) {
+	got := differ.DiffValues(map[string]string{}, map[string]string{})
+	if len(got) != 0 {
+		t.Fatalf("expected no diffs for empty maps, got %d", len(got))
+	}
+}
+
 func TestValueDiff_Describe(t *testing.T) {
 	d := differ.ValueDiff{Key: "FOO", Left: "bar", Right: "baz"}
 	got := d.Describe()
