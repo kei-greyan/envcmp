@@ -64,3 +64,22 @@ func TestHasDiff(t *testing.T) {
 		t.Error("expected HasDiff to return true")
 	}
 }
+
+func TestCompare_AllDiffTypes(t *testing.T) {
+	left := map[string]string{"ONLY_LEFT": "x", "SHARED": "old"}
+	right := map[string]string{"ONLY_RIGHT": "y", "SHARED": "new"}
+
+	res := Compare(left, right)
+	if !res.HasDiff() {
+		t.Fatal("expected diff")
+	}
+	if len(res.MissingInRight) != 1 || res.MissingInRight[0] != "ONLY_LEFT" {
+		t.Errorf("expected ONLY_LEFT missing in right, got %v", res.MissingInRight)
+	}
+	if len(res.MissingInLeft) != 1 || res.MissingInLeft[0] != "ONLY_RIGHT" {
+		t.Errorf("expected ONLY_RIGHT missing in left, got %v", res.MissingInLeft)
+	}
+	if len(res.Mismatched) != 1 || res.Mismatched[0].Key != "SHARED" {
+		t.Errorf("expected SHARED mismatch, got %v", res.Mismatched)
+	}
+}
