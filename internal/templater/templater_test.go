@@ -84,3 +84,24 @@ func TestWriteFile_InvalidPath_ReturnsError(t *testing.T) {
 		t.Error("expected error for invalid path, got nil")
 	}
 }
+
+func TestWriteFile_ContentMatchesGenerate(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".env.template")
+	opts := templater.Options{Placeholder: "FILL_ME", AddComments: true}
+
+	err := templater.WriteFile(path, sampleEnv, opts)
+	if err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("could not read written file: %v", err)
+	}
+
+	expected := templater.Generate(sampleEnv, opts)
+	if strings.TrimSpace(string(data)) != strings.TrimSpace(expected) {
+		t.Errorf("file content does not match Generate output\ngot:\n%s\nwant:\n%s", string(data), expected)
+	}
+}
