@@ -60,6 +60,18 @@ func TestGenerate_EmptyEnv(t *testing.T) {
 	}
 }
 
+func TestGenerate_SingleEntry(t *testing.T) {
+	env := map[string]string{"ONLY_KEY": "some_value"}
+	out := templater.Generate(env, templater.Options{})
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) != 1 {
+		t.Fatalf("expected 1 line, got %d", len(lines))
+	}
+	if lines[0] != "ONLY_KEY=" {
+		t.Errorf("expected 'ONLY_KEY=', got %q", lines[0])
+	}
+}
+
 func TestWriteFile_CreatesFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".env.template")
