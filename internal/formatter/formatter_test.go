@@ -80,3 +80,14 @@ func TestRender_EmptyResult_JSON(t *testing.T) {
 		t.Errorf("expected valid JSON object, got: %s", out)
 	}
 }
+
+func TestRender_EmptyResult_Text(t *testing.T) {
+	out, err := formatter.Render(comparator.Result{}, formatter.FormatText)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// An empty result should produce no diff lines.
+	if strings.Contains(out, "[MISSING") || strings.Contains(out, "[MISMATCH") {
+		t.Errorf("expected empty text output for empty result, got: %s", out)
+	}
+}
