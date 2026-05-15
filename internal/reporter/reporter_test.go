@@ -61,3 +61,28 @@ func TestReport_Mismatched(t *testing.T) {
 		t.Error("expected right value in output")
 	}
 }
+
+func TestReport_MultipleDiffs(t *testing.T) {
+	res := comparator.Result{
+		MissingInRight: []string{"OLD_KEY"},
+		MissingInLeft:  []string{"NEW_KEY"},
+		Mismatched: []comparator.MismatchedKey{
+			{Key: "PORT", LeftValue: "3000", RightValue: "8080"},
+		},
+	}
+	var buf bytes.Buffer
+	Report(&buf, res, "dev.env", "prod.env")
+	out := buf.String()
+	if strings.Contains(out, "No differences") {
+		t.Error("expected differences to be reported, got no-diff message")
+	}
+	if !strings.Contains(out, "- OLD_KEY") {
+		t.Errorf("expected missing marker for OLD_KEY, got: %s", out)
+	}
+	if !strings.Contains(out, "+ NEW_KEY") {
+		t.Errorf("expected addition marker for NEW_KEY, got: %s", out)
+	}
+	if !strings.Contains(out, "PORT") {
+		t.Errorf("expected PORT in output, got: %s", out)
+	}
+}
